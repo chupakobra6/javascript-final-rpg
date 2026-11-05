@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#131f40">
+  <title>Арена шести · RPG</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./arena.css">
+  <script type="module" src="./arena.js"></script>
+</head>
+<body>
+  <main class="game">
+    <h1 class="sr-only">Арена шести</h1>
+    <aside class="map-panel" aria-hidden="true">
+      <div class="map-view"></div>
+      <p>Здоровье</p>
+      <div id="map-roster"></div>
+    </aside>
+    <aside id="left-hero" class="hero-sheet hero-left" aria-label="Боец слева"></aside>
+
+    <section class="battle-window" aria-label="Снежный перевал">
+      <div class="field">
+        <div id="track" class="track" role="region" tabindex="0" aria-label="Бойцы и позиции на поле"></div>
+      </div>
+
+      <div class="command-bar" role="group" aria-label="Команды боя">
+        <div class="command-group left-commands" role="group" aria-label="Арена">
+          <button id="start" class="command start-command" type="button" aria-label="Начать бой">
+            <img src="./assets/vcmi/attack.png" width="24" height="24" alt="">
+            <span id="start-caption" class="command-caption">Начать бой</span>
+          </button>
+          <button id="fighters-button" class="command" type="button" aria-haspopup="dialog">
+            <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#fighters"/></svg>
+            <span class="command-caption">Бойцы</span>
+          </button>
+          <button id="grid-button" class="command" type="button" aria-label="Сетка позиций" aria-pressed="false">
+            <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#grid"/></svg>
+            <span class="command-caption">Сетка</span>
+          </button>
+          <button id="rules-button" class="command" type="button" aria-label="Правила боя" aria-haspopup="dialog">
+            <img src="./assets/vcmi/info.png" width="22" height="22" alt="">
+            <span class="command-caption">Правила</span>
+          </button>
+        </div>
+
+        <div class="battle-console">
+          <p id="console-line">Бой ещё не начался</p>
+          <p id="console-detail" hidden></p>
+        </div>
+        <div class="log-controls" role="group" aria-label="События раунда">
+          <button id="log-up" class="command" type="button" aria-label="Предыдущее событие"><span aria-hidden="true">▲</span></button>
+          <button id="log-down" class="command" type="button" aria-label="Следующее событие"><span aria-hidden="true">▼</span></button>
+        </div>
+
+        <div class="command-group right-commands" role="group" aria-label="Управление повтором">
+          <button id="journal-button" class="command" type="button" aria-label="Журнал раунда" aria-haspopup="dialog">
+            <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#journal"/></svg>
+            <span class="command-caption">Журнал</span>
+          </button>
+          <button id="prev" class="command" type="button" aria-label="Назад на раунд">
+            <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#prev"/></svg>
+            <span class="command-caption">Назад</span>
+          </button>
+          <button id="playback" class="command" type="button" aria-label="Повтор боя">
+            <svg id="pause-icon" class="command-icon" aria-hidden="true" hidden><use href="./assets/command-marks.svg#pause"/></svg>
+            <svg id="play-icon" class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#play"/></svg>
+            <span id="playback-caption" class="command-caption">Повтор</span>
+          </button>
+          <button id="next" class="command" type="button" aria-label="Далее на раунд">
+            <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#next"/></svg>
+            <span class="command-caption">Далее</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <p id="result" role="status">Шесть бойцов сражаются автоматически</p>
+        <button id="outcome-button" class="command small-command" type="button" aria-haspopup="dialog" hidden>Итоги боя</button>
+        <div class="timeline">
+          <label for="round">Раунд</label>
+          <input id="round" type="range" min="0" max="0" value="0" disabled>
+          <span id="round-label">До боя</span>
+        </div>
+      </div>
+    </section>
+
+    <aside id="right-hero" class="hero-sheet hero-right" aria-label="Боец справа"></aside>
+  </main>
+  <footer class="game-footer">
+    <span id="command-hint">Снежный перевал</span>
+    <span>Каждый за себя</span>
+  </footer>
+
+  <dialog id="roster-window" class="game-frame outcome roster-window" aria-labelledby="roster-title">
+    <header class="panel-header">
+      <h2 id="roster-title">Бойцы</h2>
+      <p id="survivors">6 из 6 в бою</p>
+    </header>
+    <div id="fighters" class="fighters panel-body" tabindex="0" aria-label="Характеристики бойцов"></div>
+    <form method="dialog" class="outcome-actions">
+      <button class="command primary confirm" type="submit" autofocus>
+        <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#check"/></svg>
+        <span>Закрыть</span>
+      </button>
+    </form>
+  </dialog>
+
+  <dialog id="journal" class="game-frame outcome" aria-labelledby="journal-title">
+    <header class="panel-header">
+      <h2 id="journal-title">Журнал раунда</h2>
+      <span id="journal-round">До боя</span>
+    </header>
+    <div class="journal-body panel-body" id="journal-body" tabindex="0" aria-label="События выбранного раунда">
+      <p id="log-empty">События появятся после начала боя.</p>
+      <ol id="log"></ol>
+    </div>
+    <form method="dialog" class="outcome-actions">
+      <button id="first" class="command primary" type="button">К началу боя</button>
+      <button class="command primary confirm" type="submit" autofocus>
+        <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#check"/></svg>
+        <span>Закрыть</span>
+      </button>
+    </form>
+  </dialog>
+
+  <dialog id="rules" class="game-frame outcome" aria-labelledby="rules-title">
+    <h2 id="rules-title" class="panel-header">Правила боя</h2>
+    <dl class="rule-list panel-body" tabindex="0">
+      <div>
+        <dt>Как проходит бой</dt>
+        <dd>Нажмите «Начать бой». Все шестеро сражаются каждый за себя. По очереди они выбирают соперника с наименьшим здоровьем, сближаются и атакуют, если хватает дальности. Побеждает последний выживший.</dd>
+      </div>
+      <div>
+        <dt>Что показывает сетка</dt>
+        <dd>Номер столбца – позиция бойца. Движение идёт влево и вправо. По высоте бойцы разнесены для видимости. Фиолетовая плашка показывает здоровье.</dd>
+      </div>
+      <div>
+        <dt>Как защищаются</dt>
+        <dd>Боец может блокировать удар оружием или уклониться. Когда оружие ломается, он берёт нож, а после поломки ножа бьёт рукой.</dd>
+      </div>
+      <div>
+        <dt>Как смотреть повтор</dt>
+        <dd>Нажмите «Пауза» и выберите раунд стрелками или ползунком. «Журнал» открывает все события этого раунда. «Новый бой» запускает другую симуляцию.</dd>
+      </div>
+    </dl>
+    <form method="dialog" class="outcome-actions">
+      <button class="command primary confirm" type="submit" autofocus>
+        <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#check"/></svg>
+        <span>Закрыть</span>
+      </button>
+    </form>
+  </dialog>
+
+  <dialog id="outcome" class="game-frame outcome" aria-labelledby="outcome-title">
+    <h2 id="outcome-title" class="panel-header">Итоги сражения</h2>
+    <div class="outcome-body panel-body">
+      <div id="winner-portrait" class="portrait" aria-hidden="true"><span class="sprite"></span></div>
+      <div>
+        <p id="winner-name"></p>
+        <p id="outcome-rounds"></p>
+      </div>
+    </div>
+    <form method="dialog" class="outcome-actions">
+      <button class="command primary confirm" type="submit" autofocus>
+        <svg class="command-icon" aria-hidden="true"><use href="./assets/command-marks.svg#check"/></svg>
+        <span>Закрыть</span>
+      </button>
+    </form>
+  </dialog>
+
+  <template id="fighter-card">
+    <article class="fighter">
+      <div class="portrait" aria-hidden="true"><span class="sprite"></span></div>
+      <div class="fighter-details">
+        <header class="fighter-header">
+          <h3></h3>
+          <p class="fighter-class"></p>
+        </header>
+        <div class="health-label"><span>Здоровье</span><span class="health-value"></span></div>
+        <meter class="health" min="0"></meter>
+        <dl>
+          <div><dt>Мана</dt><dd class="mana"></dd></div>
+          <div><dt>Позиция</dt><dd class="position"></dd></div>
+          <div><dt>Оружие</dt><dd class="weapon"></dd></div>
+        </dl>
+        <p class="eliminated" hidden>Выбыл из боя</p>
+      </div>
+    </article>
+  </template>
+</body>
+</html>
