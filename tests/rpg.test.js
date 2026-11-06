@@ -283,6 +283,35 @@ describe('Движение и бой', () => {
     expect(deadTurn).not.toHaveBeenCalled();
   });
 
+  test('события повтора отражают состояние до удара и после выбытия', () => {
+    const attacker = new Warrior(1, 'А');
+    const target = new Player(3, 'Б');
+    target.life = 1;
+    const random = jest.spyOn(Math, 'random').mockReturnValue(0.4);
+    const events = [];
+    const messages = [];
+    const winner = play([attacker, target], {
+      log: (message) => messages.push(message),
+      onEvent(round, { actor, target, ...event }) {
+        events.push({
+          round, actor: actor.position, target: target.position,
+          life: target.life, entries: messages.length, ...event
+        });
+      }
+    });
+
+    expect(winner).toBe(attacker);
+    expect(events).toEqual([
+      { round: 1, kind: 'move', actor: 3, target: 3, life: 1, entries: 2 },
+      { round: 1, kind: 'aim', actor: 3, target: 3, life: 1, distance: 1, entries: 2 },
+      {
+        round: 1, kind: 'resolve', actor: 3, target: 4, life: 0, entries: 5,
+        outcome: 'hit', healthLost: 1, manaSpent: 0, pushed: true, eliminated: true
+      }
+    ]);
+    expect(random).toHaveBeenCalledTimes(4);
+  });
+
   test('обычный бой доходит до победы даже на большой начальной дистанции', () => {
     const attacker = new Player(0, 'А');
     const defender = new Player(5000, 'Б');

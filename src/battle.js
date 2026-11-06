@@ -1,7 +1,8 @@
 export function play(players, {
   log = console.log,
   maxRounds = Infinity,
-  onRound
+  onRound,
+  onEvent
 } = {}) {
   let survivors = players.filter((player) => !player.isDead());
 
@@ -9,7 +10,11 @@ export function play(players, {
     log(`Раунд ${round}`);
     for (const player of survivors) {
       if (!player.isDead()) {
-        player.turn(survivors, log);
+        if (onEvent) {
+          player.turn(survivors, log, (event) => onEvent(round, event));
+        } else {
+          player.turn(survivors, log);
+        }
       }
     }
 

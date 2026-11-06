@@ -95,15 +95,18 @@ export class Player {
     }
   }
 
-  tryAttack(enemy, log) {
+  tryAttack(enemy, log, onEvent) {
     this.checkWeapon();
     const samePosition = this.position === enemy.position;
     const distance = samePosition ? 1 : Math.abs(this.position - enemy.position);
     if (distance > this.weapon.range) {
       log?.(`${this.name} не достаёт до цели (${enemy.name}).`);
+      onEvent?.({ kind: 'resolve', actor: this, target: enemy, outcome: 'out-of-range' });
       return;
     }
 
+    onEvent?.({ kind: 'aim', actor: this, target: enemy, distance });
+    const targetPosition = enemy.position;
     this.weapon.takeDamage(10 * this.getLuck());
     let damage = this.getDamage(distance);
     if (samePosition) {
@@ -141,6 +144,13 @@ export class Player {
     if (enemy.isDead()) {
       log?.(`${enemy.name} выбывает из боя.`);
     }
+    onEvent?.({
+      kind: 'resolve', actor: this, target: enemy, outcome,
+      healthLost: previousLife - enemy.life,
+      manaSpent: previousMagic - enemy.magic,
+      pushed: enemy.position !== targetPosition,
+      eliminated: enemy.isDead()
+    });
   }
 
   chooseEnemy(players) {
@@ -158,7 +168,7 @@ export class Player {
     this.move(enemy.position - this.position);
   }
 
-  turn(players, log) {
+  turn(players, log, onEvent) {
     const enemy = this.chooseEnemy(players);
     if (enemy === null) {
       return;
@@ -168,9 +178,14 @@ export class Player {
     this.moveToEnemy(enemy);
     if (previousPosition !== this.position) {
       log?.(`${this.name} перемещается на позицию ${this.position}.`);
+      onEvent?.({ kind: 'move', actor: this, target: enemy });
     }
 
-    this.tryAttack(enemy, log);
+    if (onEvent) {
+      this.tryAttack(enemy, log, onEvent);
+    } else {
+      this.tryAttack(enemy, log);
+    }
   }
 }
 
